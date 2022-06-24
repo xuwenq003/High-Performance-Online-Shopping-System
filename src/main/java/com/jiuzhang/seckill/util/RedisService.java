@@ -18,10 +18,11 @@ public class RedisService {
      * @param key
      * @param value
      */
-    public void setValue(String key, Long value) {
+    public RedisService setValue(String key, Long value) {
         Jedis jedisClient = jedisPool.getResource();
         jedisClient.set(key, value.toString());
         jedisClient.close();
+        return this;
     }
 
     /**
@@ -72,4 +73,9 @@ public class RedisService {
     }
 
 
+    public void revertStock(String key) {
+        Jedis jedisClient = jedisPool.getResource();
+        jedisClient.incr(key);
+        jedisClient.close();
+    }
 }

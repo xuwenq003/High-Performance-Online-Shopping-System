@@ -48,6 +48,10 @@ public class SeckillActivityService {
         // 发送创建订单消息
         rocketMQService.sendMessage("seckill_order", JSON.toJSONString(order));
 
+
+        // 发送订单付款状态校验信息
+        rocketMQService.sendDelayMessage("pay_check", JSON.toJSONString(order), 3);
+
         return order;
     }
 
