@@ -7,6 +7,7 @@ import com.jiuzhang.seckill.db.po.Order;
 import com.jiuzhang.seckill.db.po.SeckillActivity;
 import com.jiuzhang.seckill.db.po.SeckillCommodity;
 import com.jiuzhang.seckill.service.SeckillActivityService;
+import com.jiuzhang.seckill.util.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,6 +38,9 @@ public class SeckillActivityController {
 
     @Autowired
     private SeckillActivityService seckillActivityService;
+
+    @Resource
+    private RedisService redisService;
 
     @RequestMapping("/addSeckillActivity")
     public String addSeckillActivity() {
@@ -107,11 +112,19 @@ public class SeckillActivityController {
         ModelAndView modelAndView = new ModelAndView();
 
         try {
+            if (redisService.isInLimitMember(seckillActivityId, userId)) {
+                // 提示用户已经在限购名单中，返回结果
+                modelAndView.addObject("resultInfo", "对不起，您已在限购名单中");
+                modelAndView.setViewName("seckill_result");
+                return modelAndView;
+            }
             stockValidateResult = seckillActivityService.seckillStockValidator(seckillActivityId);
             if (stockValidateResult) {
                 Order order = seckillActivityService.createOrder(seckillActivityId, userId);
                 modelAndView.addObject("resultInfo", "秒杀成功，订单创建中，订单 ID: " + order.getOrderNo());
                 modelAndView.addObject("orderNo", order.getOrderNo());
+                // 添加用户到已购名单中
+                redisService.addLimitMember(seckillActivityId, userId);
             } else {
                 modelAndView.addObject("resultInfo", "对不起，商品库存不足");
             }
