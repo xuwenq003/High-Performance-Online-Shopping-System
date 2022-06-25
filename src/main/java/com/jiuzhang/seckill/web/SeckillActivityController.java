@@ -110,7 +110,6 @@ public class SeckillActivityController {
             seckillCommodity = JSON.parseObject(seckillCommodityInfo, SeckillCommodity.class);
         } else {
             seckillCommodity = seckillCommodityDao.querySeckillCommodityById(seckillActivity.getCommodityId());
-            log.error("miss!!!");
         }
 
         resultMap.put("seckillActivity", seckillActivity);
