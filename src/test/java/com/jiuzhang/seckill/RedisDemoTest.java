@@ -35,4 +35,13 @@ public class RedisDemoTest {
             System.out.println(redisService.tryGetDistributedLock("A", requestId, 1000));
         }
     }
+
+    @Test
+    public void testConcurrent() {
+        for (int i = 0; i < 10; i++) {
+            String requestId = UUID.randomUUID().toString();
+            System.out.println(redisService.tryGetDistributedLock("A", requestId, 1000));
+            redisService.releaseDistributedLock("A", requestId);
+        }
+    }
 }
