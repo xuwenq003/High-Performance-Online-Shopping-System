@@ -107,4 +107,25 @@ public class RedisService {
         jedisClient.srem("seckillActivity_users:" + activityId, String.valueOf(userId));
         jedisClient.close();
     }
+
+    public boolean tryGetDistributedLock(String lockKey, String requireId, int expireTime) {
+        Jedis jedisClient = jedisPool.getResource();
+        String result = jedisClient.set(lockKey, requireId, "NX", "PX", expireTime);
+        jedisClient.close();
+        if ("OK".equals(result)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean releaseDistributedLock(String lockKey, String requestId) {
+        Jedis jedisClient = jedisPool.getResource();
+        String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+        Long result = (Long) jedisClient.eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestId));
+        jedisClient.close();
+        if (result == 1L) {
+            return true;
+        }
+        return false;
+    }
 }
